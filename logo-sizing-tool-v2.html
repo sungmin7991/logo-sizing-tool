@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로고 광학 보정 비교 툴 v2 (4단계)</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+  background: #f0f2f5;
+  color: #1a1a1a;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: #1a1a1a;
+  color: white;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header h1 { font-size: 15px; font-weight: 700; }
+.header p  { font-size: 11px; color: #777; margin-top: 2px; }
+
+/* ── Container ── */
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+/* ── Category Info Bar ── */
+.cat-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.cat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.cat-pill.xh { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.cat-pill.h  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.cat-pill.s  { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.cat-pill.c  { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
+.cat-dot { width: 7px; height: 7px; border-radius: 50%; }
+.cat-dot.xh { background: #0ea5e9; }
+.cat-dot.h  { background: #3b82f6; }
+.cat-dot.s  { background: #10b981; }
+.cat-dot.c  { background: #8b5cf6; }
+
+/* ── Compare Section ── */
+.compare-section {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.compare-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 100px;
+  letter-spacing: .5px;
+}
+.badge-before { background: #e5e7eb; color: #374151; }
+.badge-after  { background: #fee2e2; color: #b91c1c; }
+.compare-header span { font-size: 11px; color: #aaa; }
+.module-scroll {
+  overflow-x: auto;
+  padding: 16px;
+  scroll-behavior: smooth;
+}
+.module-scroll::-webkit-scrollbar { height: 4px; }
+.module-scroll::-webkit-scrollbar-track { background: #f5f5f5; }
+.module-scroll::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+/* ── Brand Pair Row ── */
+.brand-row {
+  display: flex;
+  gap: 16px;
+  min-width: max-content;
+}
+.brand-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pair-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #aaa;
+  text-align: center;
+  margin-bottom: 4px;
+  letter-spacing: .3px;
+}
+.pair-cards {
+  display: flex;
+  gap: 2px;
+  align-items: flex-start;
+}
+.pair-divider {
+  width: 1px;
+  background: #eee;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+.pair-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.pair-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.pair-card-label.before {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+.pair-card-label.after {
+  background: #fce7f3;
+  color: #ec4899;
+}
+.brand-card {
+  width: 200px;
+  flex-shrink: 0;
+  background: #f8f8f8;
+  border-radius: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+.brand-card:hover { opacity: .95; }
+
+/* Banner area */
+.brand-banner {
+  width: 200px;
+  height: 80px;
+  position: relative;
+  overflow: hidden;
+  background: #ddd;
+}
+.banner-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* dim overlay — mirrors Figma dim layer: row, center/center, padding:10px */
+.banner-dim {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: rgba(0,0,0,0.2);
+}
+.logo-area {
+  background: #FF0000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.logo-area img { display: block; }
+
+/* Thumbnail */
+.brand-thumb {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  background: #eee;
+}
+.brand-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Info */
+.brand-info {
+  padding: 8px 8px 10px;
+  background: white;
+}
+.store-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 2px;
+}
+.store-name::after {
+  content: ' ›';
+  color: #bbb;
+  font-weight: 400;
+}
+.product-name {
+  font-size: 10px;
+  color: #666;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 5px;
+  min-height: 28px;
+}
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.discount {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ff0000;
+}
+.price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111;
+}
+.price-unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: #111;
+}
+
+/* ── Logo Size Indicator ── */
+.size-tag {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0,0,0,.5);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* ── Section ── */
+.section {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title { font-size: 14px; font-weight: 700; }
+.section-sub   { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+/* ── Spec Table ── */
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.spec-table th {
+  background: #f5f5f5;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #e5e5e5;
+}
+.spec-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+.spec-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+.spec-code {
+  background: #1e1e1e;
+  color: #a8d8a8;
+  font-family: monospace;
+  font-size: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.spec-note {
+  font-size: 11px;
+  color: #999;
+}
+
+/* ── Logo Cards ── */
+.logo-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.logo-card {
+  border: 1.5px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.logo-card:hover { border-color: #ddd; }
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.card-name { font-size: 12px; font-weight: 700; }
+.card-meta { font-size: 10px; color: #bbb; margin-top: 2px; }
+.card-previews { display: flex; gap: 8px; margin-bottom: 8px; }
+.preview-wrap {}
+.preview-label-sm {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #ccc;
+  margin-bottom: 3px;
+}
+.preview-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #1a1a1a;
+  flex-shrink: 0;
+}
+.preview-box img { display: block; }
+
+/* Cat selector */
+.cat-selector { display: flex; gap: 4px; }
+.cat-btn {
+  flex: 1;
+  padding: 4px;
+  border: 1.5px solid #eee;
+  background: white;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .12s;
+  text-align: center;
+}
+.cat-btn:hover { border-color: #ccc; }
+.cat-btn.ah { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+.cat-btn.as { border-color: #10b981; color: #10b981; background: #ecfdf5; }
+.cat-btn.ac { border-color: #8b5cf6; color: #8b5cf6; background: #f5f3ff; }
+
+/* btn */
+.btn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity .15s;
+}
+.btn:hover { opacity: .8; }
+.btn-outline { background: white; color: #333; border: 1.5px solid #ddd; }
+.btn-dark    { background: #1a1a1a; color: white; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>로고 광학 보정 비교 툴</h1>
+    <p>Exclusive 모듈 · 실제 디자인 위에서 Before / After 비교</p>
+  </div>
+  <button class="btn btn-outline" id="resetBtn">초기화</button>
+</div>
+
+<div class="container">
+
+  <!-- Category legend (동적 렌더링) -->
+  <div class="cat-bar" id="catBar"></div>
+
+  <!-- Before / After Design Preview -->
+  <div class="compare-section">
+    <div class="compare-header">
+      <span class="badge badge-before">BEFORE</span>
+      <span>80×80, fit</span>
+      <span style="color:#ddd;">│</span>
+      <span class="badge badge-after">AFTER</span>
+      <span id="afterDesc">광학 보정</span>
+    </div>
+    <div class="module-scroll">
+      <div class="brand-row" id="pairRow"></div>
+    </div>
+  </div>
+
+  <!-- After only row -->
+  <div class="compare-section">
+    <div class="compare-header">
+      <span class="badge badge-after">AFTER</span>
+      <span>광학 보정 전체 한눈에 보기</span>
+    </div>
+    <div class="module-scroll">
+      <div class="brand-row" id="afterOnlyRow"></div>
+    </div>
+  </div>
+
+  <!-- Spec table -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">개발 적용 스펙</div>
+    </div>
+    <table class="spec-table" id="specTable">
+      <thead>
+        <tr>
+          <th>분류</th>
+          <th>비율 기준 (W ÷ H)</th>
+          <th>max-width</th>
+          <th>max-height</th>
+        </tr>
+      </thead>
+      <tbody id="specTableBody"></tbody>
+    </table>
+    <div class="spec-code">img { max-width: [기준값]; max-height: [기준값]; width: auto; height: auto; object-fit: contain; }</div>
+    <div class="spec-note">※ 로고 이미지 파일은 여백 없이 타이트하게 크롭된 PNG여야 의도한 대로 표시됨</div>
+  </div>
+
+  <!-- Category management cards -->
+  <div class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">로고별 카테고리 설정</div>
+        <div class="section-sub">버튼 클릭으로 변경 · 변경 즉시 위 미리보기에 반영</div>
+      </div>
+    </div>
+    <div class="logo-cards" id="logoCards"></div>
+  </div>
+
+</div>
+
+<script>
+/* ── Categories ──────────────────────────────────────────────────
+   로고 분류 기준: 로고 이미지의 가로 ÷ 세로 비율 (W / H)
+
+   분류      비율 기준              max-width   max-height
+   ─────────────────────────────────────────────────────
+   가로형    비율 > 3.5             110px       20px
+   기본형    1.5 이상 ~ 3.5 이하    84px        28px
+   정방형    비율 < 1.5             56px        40px
+
+   적용 CSS:
+     img {
+       max-width: [위 표 기준값];
+       max-height: [위 표 기준값];
+       width: auto;
+       height: auto;
+       object-fit: contain;
+     }
+
+   주의: 로고 이미지 파일은 여백 없이 타이트하게 크롭된 PNG여야 함
+   ─────────────────────────────────────────────────────────────── */
+const CAT = {
+  xh: { label:'초가로형', maxW:120, maxH:28, color:'#0ea5e9' },
+  h:  { label:'가로형',   maxW:104, maxH:24, color:'#3b82f6' },
+  s:  { label:'기본형',   maxW:85,  maxH:24, color:'#10b981' },
+  c:  { label:'정방형',   maxW:58,  maxH:41, color:'#8b5cf6' },
+};
+
+function detectCat(w, h) {
+  const r = w / h;
+  if (r > 6.0) return 'xh';
+  if (r > 3.5) return 'h';
+  if (r >= 1.5) return 's';
+  return 'c';
+}
+
+/* ── Brand Data ── */
+const BRANDS = [
+  { name:'로토코',        logo:'logos/logo01.png', logoW:500,  logoH:152,  banner:'logos/banners/banner01.png', thumb:'logos/thumbs/thumb01.png', product:'기본 셔츠 BASIC SHIRTS',                              price:'72,000',  discount:0  },
+  { name:'CHIXLABEL',    logo:'logos/logo02.png', logoW:300,  logoH:43,   banner:'logos/banners/banner02.png', thumb:'logos/thumbs/thumb02.png', product:'[칙스라벨][네이버단독] 애니 니트 가디건 - Baby Blue', price:'134,920', discount:15 },
+  { name:'타이맥스',      logo:'logos/logo03.png', logoW:300,  logoH:53,   banner:'logos/banners/banner03.png', thumb:'logos/thumbs/thumb03.png', product:'[타이맥스] 이지리더 데이데이트 브라운 가죽스트랩 손목시계 35mm', price:'93,570', discount:21 },
+  { name:'Carlyn',       logo:'logos/logo04.png', logoW:1546, logoH:588,  banner:'logos/banners/banner04.png', thumb:'logos/thumbs/thumb04.png', product:'Nuv Ople 누브 오플 Beige H76138010',                price:'104,500', discount:5  },
+  { name:'NOS7',         logo:'logos/logo05.png', logoW:401,  logoH:390,  banner:'logos/banners/banner05.png', thumb:'logos/thumbs/thumb05.png', product:'[NOS7] NOS7 X 헬리녹스 사코슈(스몰)',               price:'24,360',  discount:9  },
+  { name:'Adidas',       logo:'logos/logo06.png', logoW:326,  logoH:317,  banner:'logos/banners/banner06.png', thumb:'logos/thumbs/thumb06.png', product:'아딜레늄 5.0 바나나 오버레이 데님 팬츠',             price:'179,000', discount:0  },
+  { name:'마스마룰즈',    logo:'logos/logo07.png', logoW:928,  logoH:418,  banner:'logos/banners/banner07.png', thumb:'logos/thumbs/thumb07.png', product:'Check Frill Windbreaker Jacket_Pink',               price:'105,000', discount:12 },
+  { name:'OiOi',         logo:'logos/logo08.png', logoW:4000, logoH:1745, banner:'logos/banners/banner08.png', thumb:'logos/thumbs/thumb08.png', product:'[오아이오아이컬렉션] 레오파드 크로스백 [BROWN]',       price:'40,520',  discount:48 },
+  { name:'Matin Kim',    logo:'logos/logo09.png', logoW:894,  logoH:132,  banner:'logos/banners/banner09.png', thumb:'logos/thumbs/thumb09.png', product:'[네이버단독][마뗑킴] MATIN UNICORN PACKABLE ECOBAG', price:'40,120',  discount:16 },
+  { name:'브룩스브라더스', logo:'logos/logo10.png', logoW:640,  logoH:101,  banner:'logos/banners/banner10.png', thumb:'logos/thumbs/thumb10.png', product:'[브룩스브라더스] 레귤러핏 논아이론 옥스포드 뱅갈 스트라이프 셔츠', price:'87,270', discount:32 },
+  { name:'로지레이어',    logo:'logos/logo11.png', logoW:300,  logoH:26,   banner:'logos/banners/banner11.png', thumb:'logos/thumbs/thumb11.png', product:'[로지레이어] 포멀캡소매블라우스 피치핑크, Free',      price:'59,860',  discount:22 },
+  { name:'레이브스튜디오', logo:'logos/logo13.png', logoW:300,  logoH:89,   banner:'logos/banners/banner13.png', thumb:'logos/thumbs/thumb13.png', product:'[네이버 단독] [레이브] Love Bites Graphic T-Shirt', price:'43,410',  discount:31 },
+  { name:'룩캐스트',      logo:'logos/logo14.png', logoW:506,  logoH:99,   banner:'logos/banners/banner14.png', thumb:'logos/thumbs/thumb14.png', product:'코린 린넨 카라리스 크롭 자켓_라이트 베이지',          price:'151,200', discount:17 },
+  { name:'ONIR',         logo:'logos/logo15.png', logoW:300,  logoH:38,   banner:'logos/banners/banner15.png', thumb:'logos/thumbs/thumb15.png', product:'[오니르] 플리츠 롱슬리브 탑 차콜',                 price:'53,250',  discount:17 },
+];
+
+/* Attach category to each brand */
+BRANDS.forEach(b => b.cat = detectCat(b.logoW, b.logoH));
+
+/* ── Make Brand Card ── */
+function makeBrandCard(brand, mode) {
+  const cat = CAT[brand.cat];
+
+  const card = document.createElement('div');
+  card.className = 'brand-card';
+
+  /* Banner */
+  const banner = document.createElement('div');
+  banner.className = 'brand-banner';
+
+  const bg = document.createElement('img');
+  bg.src = brand.banner;
+  bg.className = 'banner-bg';
+  bg.alt = '';
+  banner.appendChild(bg);
+
+  /* dim overlay (Figma: row, center/center, padding:10px) */
+  const dim = document.createElement('div');
+  dim.className = 'banner-dim';
+
+  /* Logo area */
+  const logoArea = document.createElement('div');
+  logoArea.className = 'logo-area';
+
+  const logoImg = document.createElement('img');
+  logoImg.src = brand.logo;
+  logoImg.alt = brand.name;
+
+  if (mode === 'before') {
+    logoArea.style.cssText = 'width:80px;height:80px;background:transparent;';
+    logoImg.style.cssText = 'width:80px;height:80px;object-fit:contain;';
+  } else {
+    logoArea.style.cssText = `width:${cat.maxW}px;height:${cat.maxH}px;background:transparent;`;
+    logoImg.style.cssText = `max-width:${cat.maxW}px;max-height:${cat.maxH}px;width:auto;height:auto;object-fit:contain;`;
+  }
+
+  /* Size tag */
+  const sizeTag = document.createElement('div');
+  sizeTag.className = 'size-tag';
+  sizeTag.textContent = mode === 'before' ? '80×80' : `${cat.maxW}×${cat.maxH}`;
+
+  logoArea.appendChild(logoImg);
+  dim.appendChild(logoArea);
+  banner.appendChild(dim);
+  banner.appendChild(sizeTag);
+  card.appendChild(banner);
+
+  return card;
+}
+
+/* ── Make Management Card ── */
+function makeLogoCard(brand, idx) {
+  const cat = CAT[brand.cat];
+  const ratio = (brand.logoW / brand.logoH).toFixed(1);
+
+  const card = document.createElement('div');
+  card.className = 'logo-card';
+
+  /* top */
+  const top = document.createElement('div');
+  top.className = 'card-top';
+  top.innerHTML = `
+    <div>
+      <div class="card-name">${brand.name}</div>
+      <div class="card-meta">${brand.logoW}×${brand.logoH} · 비율 ${ratio}:1</div>
+    </div>
+    <div style="width:8px;height:8px;border-radius:50%;background:${cat.color};margin-top:2px;"></div>
+  `;
+
+  /* previews */
+  const previews = document.createElement('div');
+  previews.className = 'card-previews';
+
+  const c = CAT[brand.cat];
+  const wrap = document.createElement('div');
+  wrap.className = 'preview-wrap';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'preview-label-sm';
+  lbl.textContent = `After · ${c.label}`;
+
+  const box = document.createElement('div');
+  box.className = 'preview-box';
+  const img = document.createElement('img');
+  img.src = brand.logo;
+  box.style.cssText = 'display:inline-block;';
+  img.style.cssText = `max-width:${c.maxW}px;max-height:${c.maxH}px;width:auto;height:auto;display:block;`;
+
+  box.appendChild(img);
+  wrap.append(lbl, box);
+  previews.appendChild(wrap);
+
+  /* cat selector */
+  const sel = document.createElement('div');
+  sel.className = 'cat-selector';
+  Object.entries(CAT).forEach(([key, c]) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (brand.cat === key ? ' a' + key : '');
+    btn.textContent = c.label;
+    btn.onclick = () => { BRANDS[idx].cat = key; render(); };
+    sel.appendChild(btn);
+  });
+
+  card.append(top, previews, sel);
+  return card;
+}
+
+/* ── Render ── */
+function render() {
+  /* Category legend 동적 렌더링 */
+  const catBar = document.getElementById('catBar');
+  catBar.innerHTML = '';
+  Object.entries(CAT).forEach(([key, c]) => {
+    const pill = document.createElement('div');
+    pill.className = `cat-pill ${key}`;
+    pill.innerHTML = `<div class="cat-dot ${key}"></div>${c.label} · max ${c.maxW}×${c.maxH}px`;
+    catBar.appendChild(pill);
+  });
+
+  /* 개발 적용 스펙 표 동적 렌더링 */
+  const ratioLabels = { xh:'6.0 초과', h:'3.5 이상 ~ 6.0 이하', s:'1.5 이상 ~ 3.5 이하', c:'1.5 미만' };
+  const specBody = document.getElementById('specTableBody');
+  specBody.innerHTML = '';
+  Object.entries(CAT).forEach(([key, c]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="spec-badge" style="background:${c.color}">${c.label}</span></td>
+      <td>${ratioLabels[key]}</td>
+      <td>${c.maxW}px</td>
+      <td>${c.maxH}px</td>`;
+    specBody.appendChild(tr);
+  });
+
+  const pairRow = document.getElementById('pairRow');
+  pairRow.innerHTML = '';
+
+  BRANDS.forEach(brand => {
+    const pair = document.createElement('div');
+    pair.className = 'brand-pair';
+
+    /* 브랜드명 레이블 */
+    const label = document.createElement('div');
+    label.className = 'pair-label';
+    label.textContent = brand.name;
+
+    /* Before + After 카드 나란히 */
+    const cards = document.createElement('div');
+    cards.className = 'pair-cards';
+
+    const beforeWrap = document.createElement('div');
+    beforeWrap.className = 'pair-card-wrap';
+    const beforeCard = makeBrandCard(brand, 'before');
+    const beforeLbl = document.createElement('div');
+    beforeLbl.className = 'pair-card-label before';
+    beforeLbl.textContent = 'BEFORE';
+    beforeWrap.append(beforeCard, beforeLbl);
+
+    const divider = document.createElement('div');
+    divider.className = 'pair-divider';
+
+    const afterWrap = document.createElement('div');
+    afterWrap.className = 'pair-card-wrap';
+    const afterCard = makeBrandCard(brand, 'after');
+    const afterLbl = document.createElement('div');
+    afterLbl.className = 'pair-card-label after';
+    afterLbl.textContent = 'AFTER';
+    afterWrap.append(afterCard, afterLbl);
+
+    cards.append(beforeWrap, divider, afterWrap);
+    pair.append(label, cards);
+    pairRow.appendChild(pair);
+  });
+
+  /* After only row — 카테고리 섞어서 표시 (가로형·기본형·정방형 인터리브) */
+  const afterOnlyRow = document.getElementById('afterOnlyRow');
+  afterOnlyRow.innerHTML = '';
+  const h = BRANDS.filter(b => b.cat === 'h');
+  const s = BRANDS.filter(b => b.cat === 's');
+  const c = BRANDS.filter(b => b.cat === 'c');
+  const mixed = [];
+  const maxLen = Math.max(h.length, s.length, c.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (h[i]) mixed.push(h[i]);
+    if (s[i]) mixed.push(s[i]);
+    if (c[i]) mixed.push(c[i]);
+  }
+  mixed.forEach(brand => afterOnlyRow.appendChild(makeBrandCard(brand, 'after')));
+
+  /* Management cards */
+  const grid = document.getElementById('logoCards');
+  grid.innerHTML = '';
+  BRANDS.forEach((brand, i) => grid.appendChild(makeLogoCard(brand, i)));
+}
+
+/* ── Reset ── */
+document.getElementById('resetBtn').onclick = () => {
+  BRANDS.forEach(b => b.cat = detectCat(b.logoW, b.logoH));
+  render();
+};
+
+/* ── Init ── */
+render();
+</script>
+</body>
+</html>
