@@ -408,12 +408,8 @@ body {
 
 <div class="container">
 
-  <!-- Category legend -->
-  <div class="cat-bar">
-    <div class="cat-pill h"><div class="cat-dot h"></div>가로형 · max 104×18px</div>
-    <div class="cat-pill s"><div class="cat-dot s"></div>기본형 · max 84×24px</div>
-    <div class="cat-pill c"><div class="cat-dot c"></div>정방형 · max 60×28px</div>
-  </div>
+  <!-- Category legend (동적 렌더링) -->
+  <div class="cat-bar" id="catBar"></div>
 
   <!-- Before / After Design Preview -->
   <div class="compare-section">
@@ -422,7 +418,7 @@ body {
       <span>80×80, fit</span>
       <span style="color:#ddd;">│</span>
       <span class="badge badge-after">AFTER</span>
-      <span>광학 보정 · 104×30</span>
+      <span id="afterDesc">광학 보정</span>
     </div>
     <div class="module-scroll">
       <div class="brand-row" id="pairRow"></div>
@@ -642,6 +638,16 @@ function makeLogoCard(brand, idx) {
 
 /* ── Render ── */
 function render() {
+  /* Category legend 동적 렌더링 */
+  const catBar = document.getElementById('catBar');
+  catBar.innerHTML = '';
+  Object.entries(CAT).forEach(([key, c]) => {
+    const pill = document.createElement('div');
+    pill.className = `cat-pill ${key}`;
+    pill.innerHTML = `<div class="cat-dot ${key}"></div>${c.label} · max ${c.maxW}×${c.maxH}px`;
+    catBar.appendChild(pill);
+  });
+
   const pairRow = document.getElementById('pairRow');
   pairRow.innerHTML = '';
 
