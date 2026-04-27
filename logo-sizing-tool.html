@@ -441,7 +441,7 @@ body {
     <div class="section-header">
       <div class="section-title">개발 적용 스펙</div>
     </div>
-    <table class="spec-table">
+    <table class="spec-table" id="specTable">
       <thead>
         <tr>
           <th>분류</th>
@@ -450,11 +450,7 @@ body {
           <th>max-height</th>
         </tr>
       </thead>
-      <tbody>
-        <tr><td><span class="spec-badge" style="background:#3b82f6">가로형</span></td><td>3.5 초과</td><td>110px</td><td>20px</td></tr>
-        <tr><td><span class="spec-badge" style="background:#10b981">기본형</span></td><td>1.5 이상 ~ 3.5 이하</td><td>84px</td><td>28px</td></tr>
-        <tr><td><span class="spec-badge" style="background:#8b5cf6">정방형</span></td><td>1.5 미만</td><td>56px</td><td>40px</td></tr>
-      </tbody>
+      <tbody id="specTableBody"></tbody>
     </table>
     <div class="spec-code">img { max-width: [기준값]; max-height: [기준값]; width: auto; height: auto; object-fit: contain; }</div>
     <div class="spec-note">※ 로고 이미지 파일은 여백 없이 타이트하게 크롭된 PNG여야 의도한 대로 표시됨</div>
@@ -561,7 +557,7 @@ function makeBrandCard(brand, mode) {
     logoArea.style.cssText = 'width:80px;height:80px;background:transparent;';
     logoImg.style.cssText = 'width:80px;height:80px;object-fit:contain;';
   } else {
-    logoArea.style.cssText = 'width:110px;height:40px;background:transparent;';
+    logoArea.style.cssText = `width:${cat.maxW}px;height:${cat.maxH}px;background:transparent;`;
     logoImg.style.cssText = `max-width:${cat.maxW}px;max-height:${cat.maxH}px;width:auto;height:auto;object-fit:contain;`;
   }
 
@@ -646,6 +642,20 @@ function render() {
     pill.className = `cat-pill ${key}`;
     pill.innerHTML = `<div class="cat-dot ${key}"></div>${c.label} · max ${c.maxW}×${c.maxH}px`;
     catBar.appendChild(pill);
+  });
+
+  /* 개발 적용 스펙 표 동적 렌더링 */
+  const ratioLabels = { h:'3.5 초과', s:'1.5 이상 ~ 3.5 이하', c:'1.5 미만' };
+  const specBody = document.getElementById('specTableBody');
+  specBody.innerHTML = '';
+  Object.entries(CAT).forEach(([key, c]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="spec-badge" style="background:${c.color}">${c.label}</span></td>
+      <td>${ratioLabels[key]}</td>
+      <td>${c.maxW}px</td>
+      <td>${c.maxH}px</td>`;
+    specBody.appendChild(tr);
   });
 
   const pairRow = document.getElementById('pairRow');
