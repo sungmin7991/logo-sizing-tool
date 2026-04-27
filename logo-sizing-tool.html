@@ -698,20 +698,10 @@ function render() {
     pairRow.appendChild(pair);
   });
 
-  /* After only row — 카테고리 섞어서 표시 (가로형·기본형·정방형 인터리브) */
+  /* After only row — 위 비포/애프터와 동일한 순서 */
   const afterOnlyRow = document.getElementById('afterOnlyRow');
   afterOnlyRow.innerHTML = '';
-  const h = BRANDS.filter(b => b.cat === 'h');
-  const s = BRANDS.filter(b => b.cat === 's');
-  const c = BRANDS.filter(b => b.cat === 'c');
-  const mixed = [];
-  const maxLen = Math.max(h.length, s.length, c.length);
-  for (let i = 0; i < maxLen; i++) {
-    if (h[i]) mixed.push(h[i]);
-    if (s[i]) mixed.push(s[i]);
-    if (c[i]) mixed.push(c[i]);
-  }
-  mixed.forEach(brand => afterOnlyRow.appendChild(makeBrandCard(brand, 'after')));
+  BRANDS.forEach(brand => afterOnlyRow.appendChild(makeBrandCard(brand, 'after')));
 
   /* Management cards */
   const grid = document.getElementById('logoCards');
