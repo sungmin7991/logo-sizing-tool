@@ -119,6 +119,27 @@ body {
   align-self: stretch;
   flex-shrink: 0;
 }
+.pair-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.pair-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.pair-card-label.before {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+.pair-card-label.after {
+  background: #fce7f3;
+  color: #ec4899;
+}
 .brand-card {
   width: 200px;
   flex-shrink: 0;
@@ -637,12 +658,26 @@ function render() {
     const cards = document.createElement('div');
     cards.className = 'pair-cards';
 
+    const beforeWrap = document.createElement('div');
+    beforeWrap.className = 'pair-card-wrap';
     const beforeCard = makeBrandCard(brand, 'before');
-    const divider    = document.createElement('div');
-    divider.className = 'pair-divider';
-    const afterCard  = makeBrandCard(brand, 'after');
+    const beforeLbl = document.createElement('div');
+    beforeLbl.className = 'pair-card-label before';
+    beforeLbl.textContent = 'BEFORE';
+    beforeWrap.append(beforeCard, beforeLbl);
 
-    cards.append(beforeCard, divider, afterCard);
+    const divider = document.createElement('div');
+    divider.className = 'pair-divider';
+
+    const afterWrap = document.createElement('div');
+    afterWrap.className = 'pair-card-wrap';
+    const afterCard = makeBrandCard(brand, 'after');
+    const afterLbl = document.createElement('div');
+    afterLbl.className = 'pair-card-label after';
+    afterLbl.textContent = 'AFTER';
+    afterWrap.append(afterCard, afterLbl);
+
+    cards.append(beforeWrap, divider, afterWrap);
     pair.append(label, cards);
     pairRow.appendChild(pair);
   });
